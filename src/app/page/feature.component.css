@@ -1,0 +1,25 @@
+.container--filter {
+  padding: 10px;
+  color: blue;
+  font-size: 16px;
+  background: lightgrey;
+  margin: 10px;
+}
+
+.filter-label {
+  padding: 10px;
+}
+
+.filter-input {
+  padding: 10px;
+  margin: 5px;
+}
+
+
+
+.container--user-search {
+  font-size: 24px;
+  padding: 10px;
+  background: lightslategray;
+  margin: 10px;
+}

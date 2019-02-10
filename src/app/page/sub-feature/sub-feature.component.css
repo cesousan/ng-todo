@@ -1,0 +1,14 @@
+.done {
+  color: green;
+}
+
+.not-done {
+  color: orange;
+}
+
+.todo {
+  padding: 5px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-weight: 600;
+  font-size: medium;
+}

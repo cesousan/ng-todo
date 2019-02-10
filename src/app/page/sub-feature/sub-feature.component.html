@@ -1,0 +1,6 @@
+<h2>TODOS</h2>
+<div *ngFor="let todo of todos; let i = index">
+  <div [ngClass]="todo.completed ? 'todo done' : 'todo not-done'">
+    {{todo.title}}
+  </div>
+</div>

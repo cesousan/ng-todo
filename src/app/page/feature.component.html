@@ -1,0 +1,16 @@
+
+<div>
+  <h1>RESULTS</h1>
+</div>
+
+<div class="container--user-search">
+  <label class="filter-label" for="user-search">Filter by username</label>
+  <input class="filter-input" id="user-search" type="text" />
+</div>
+<div class="container--filter">
+  <button (click)="filterTodos(TodoFiltersRef.SHOW_ALL)">SHOW ALL</button>
+  <button (click)="filterTodos(TodoFiltersRef.SHOW_COMPLETED)">SHOW COMPLETED</button>
+  <button (click)="filterTodos(TodoFiltersRef.SHOW_TODO)">SHOW REMAINING</button>
+</div>
+
+<app-sub-feature [todos]="todos$ | async"></app-sub-feature>
