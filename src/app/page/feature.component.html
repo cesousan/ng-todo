@@ -5,7 +5,14 @@
 
 <div class="container--user-search">
   <label class="filter-label" for="user-search">Filter by username</label>
-  <input class="filter-input" id="user-search" type="text" />
+  <input
+    class="filter-input"
+    id="user-search"
+    type="text"
+    (keyup)="searchUser($event.target.value)"/>
+    <div *ngIf="(usernames$ | async) as names">
+      <div *ngFor="let fullName of names">{{fullName}}</div>
+    </div>
 </div>
 <div class="container--filter">
   <button (click)="filterTodos(TodoFiltersRef.SHOW_ALL)">SHOW ALL</button>

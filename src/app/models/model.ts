@@ -11,11 +11,11 @@ export enum TodoFilters {
   SHOW_TODO
 }
 
-type Email = '';
+type Email = any;
 
-type Phone = '';
+type Phone = any;
 
-type Website = '';
+type Website = any;
 
 export interface User   {
   id: number,
