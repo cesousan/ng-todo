@@ -1,23 +1,42 @@
+<div class="wrapper">
 
-<div>
-  <h1>RESULTS</h1>
-</div>
+  <div class="header">
 
-<div class="container--user-search">
-  <label class="filter-label" for="user-search">Filter by username</label>
-  <input
-    class="filter-input"
-    id="user-search"
-    type="text"
-    (keyup)="searchUser($event.target.value)"/>
-    <div *ngIf="(usernames$ | async) as names">
-      <div *ngFor="let fullName of names">{{fullName}}</div>
-    </div>
-</div>
-<div class="container--filter">
-  <button (click)="filterTodos(TodoFiltersRef.SHOW_ALL)">SHOW ALL</button>
-  <button (click)="filterTodos(TodoFiltersRef.SHOW_COMPLETED)">SHOW COMPLETED</button>
-  <button (click)="filterTodos(TodoFiltersRef.SHOW_TODO)">SHOW REMAINING</button>
-</div>
+  </div>
 
-<app-sub-feature [todos]="todos$ | async"></app-sub-feature>
+</div>
+  <form class="example-form">
+    <mat-form-field class="example-full-width" >
+      <input type="text"
+        placeholder="Search for users"
+        aria-label="Number"
+        matInput
+        [formControl]="userSearchCtrl"
+        [matAutocomplete]="auto">
+      <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" >
+        <mat-option *ngFor="let name of (usernames$ | async)" [value]="name">
+          {{name}}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+  </form>
+
+  <mat-button-toggle-group>
+      <mat-button-toggle
+        (click)="filterTodos(TodoFiltersRef.SHOW_ALL)"
+        value="SHOW_ALL">
+        SHOW ALL
+      </mat-button-toggle>
+      <mat-button-toggle
+        (click)="filterTodos(TodoFiltersRef.SHOW_COMPLETED)"
+        value="SHOW_COMPLETED">
+        SHOW COMPLETED
+      </mat-button-toggle>
+      <mat-button-toggle
+        (click)="filterTodos(TodoFiltersRef.SHOW_TODO)"
+        value="SHOW_TODO">
+        SHOW REMAINING
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+
+<app-sub-feature [todos]="todos$ | async" [users]="users$ | async" (todoToggled)="toggleTodo($event)"></app-sub-feature>

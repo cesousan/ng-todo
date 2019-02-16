@@ -1,14 +1,19 @@
+.card {
+  width: 15%;
+  margin: 20px;
+}
+
 .done {
-  color: green;
+  background: rgba(167, 250, 171, 0.4)
 }
 
-.not-done {
-  color: orange;
+.header-image {
+  background-size: cover;
 }
 
-.todo {
-  padding: 5px;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  font-weight: 600;
-  font-size: medium;
+.container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  height: 100%;
 }

@@ -6,5 +6,7 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'ngIfAsync';
+  title = 'Yet another todo app';
+  events: string[] = [];
+  opened: boolean;
 }

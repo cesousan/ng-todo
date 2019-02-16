@@ -1,54 +1,76 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { BackendService } from '../services/backend/backend.service';
-import { map, tap, debounceTime, distinctUntilChanged, withLatestFrom } from 'rxjs/operators';
+import { map, tap, debounceTime, distinctUntilChanged, withLatestFrom, startWith, scan, concatAll, toArray, filter, switchMap } from 'rxjs/operators';
 import { Todo, TodoFilters, User } from '../models/model';
+import { FormControl } from '@angular/forms';
+
 
 @Component({
   selector: 'app-feature',
   templateUrl: './feature.component.html',
   styleUrls: ['./feature.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.Default
 })
 export class FeatureComponent implements OnInit {
+
+  public userSearchCtrl: FormControl = new FormControl();
 
   public TodoFiltersRef: typeof TodoFilters = TodoFilters;
 
   public todos$: Observable<Todo[]>;
-  public usernames$: Observable<string>;
+  public usernames$: Observable<string[]>;
+  public users$: Observable<User[]>;
 
-  private showFilter: BehaviorSubject<Filter> = new BehaviorSubject(visibilityFilter(TodoFilters.SHOW_ALL));
+  private showFilter: BehaviorSubject<FilterFn> = new BehaviorSubject(visibilityFilter(TodoFilters.SHOW_ALL));
   private todoFilter$ = this.showFilter.asObservable();
   
-  private inputNames: BehaviorSubject<string> = new BehaviorSubject('');
-  private inputNames$ = this.inputNames.asObservable();
-  
-  constructor(private backend: BackendService) { }
+  private changedTodo: BehaviorSubject<Observable<Todo>> = new BehaviorSubject(of(null));
+
+  constructor(private backend: BackendService) {}
 
   ngOnInit() {
     
-    const users$ = this.backend.fetchUsers();
+    this.users$ = this.backend.fetchUsers();
 
-    const searchedUsers$: Observable<User[]> = this.inputNames$.pipe(
+    const searchedUsers$ = this.userSearchCtrl.valueChanges.pipe(
+      startWith(''),
       debounceTime(300),
       distinctUntilChanged(),
-      withLatestFrom(users$),
+      withLatestFrom(this.users$),
       map(([input, users]) => input !== ''
       ? users.filter(user =>
         user.username.toLowerCase().includes(input.toLowerCase()) ||
         user.name.toLowerCase().includes(input.toLowerCase()))
       : users
-      ),
+      )
     );
-    
-    this.usernames$ = searchedUsers$.pipe(map(getFullName));
-    
 
-    this.todos$ = combineLatest(this.backend.fetchTodos(), this.todoFilter$, searchedUsers$).pipe(
+    this.usernames$ = searchedUsers$.pipe(map(u => getFullNames(u)));
+    
+    /** not updating the ''all'' array --> to fix */
+    const allTodos$: Observable<Todo[]> = combineLatest(
+      this.backend.fetchTodos(),
+      this.changedTodo.asObservable().pipe(switchMap(x => x))
+    ).pipe(
+      map(([all, changed]) => changed !== null
+        ? all.reduce((acc, curr) => changed.id === curr.id
+          ? [...acc, changed]
+          : [...acc, curr]
+        , [])
+        : all)
+    );
+
+    this.todos$ = combineLatest(
+      allTodos$,
+      this.todoFilter$,
+      searchedUsers$
+    ).pipe(
       map(([todos, filter, searched]) => searched
         .map(getUsersTodo(todos))
         .reduce((acc, curr) => ([...acc, ...curr]), [])  
-        .filter(filter))
+        .filter(filter)
+      )
     );
 
   };
@@ -57,8 +79,8 @@ export class FeatureComponent implements OnInit {
     this.showFilter.next(visibilityFilter(filter));
   };
 
-  searchUser(name: string) {
-    this.inputNames.next(name);
+  toggleTodo(todo: Todo) {
+    this.changedTodo.next(this.backend.toggleTodo(todo));
   }
 
 }
@@ -67,9 +89,15 @@ const getUsersTodo = (todos: Todo[]) => (user: User): Todo[] => {
   return todos.filter(t => t.userId === user.id)
 };
 
-const getFullName = ({name, username}: User): string => name && username ? `${name.split(' ')[0]} "${username}" ${name.split(' ')[1]}` : ''; 
-
-const visibilityFilter = (todoFilter: TodoFilters): Filter => {
+const getFullNames = (users: User[]): string[] =>
+  users.map((user: User) => {
+    const {name} = user;
+    return name ? name : '';
+  }
+)
+  
+const visibilityFilter = (todoFilter: TodoFilters): FilterFn => {
+  console.log(todoFilter);
   switch (todoFilter) {
     case TodoFilters.SHOW_COMPLETED:
       return todo => todo.completed;
@@ -81,6 +109,7 @@ const visibilityFilter = (todoFilter: TodoFilters): Filter => {
   }
 };
 
-interface Filter {
+
+interface FilterFn {
   (todo:Todo): boolean
 }
