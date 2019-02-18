@@ -4,6 +4,7 @@ import { BackendService } from '../services/backend/backend.service';
 import { map, tap, debounceTime, distinctUntilChanged, withLatestFrom, startWith, scan, concatAll, toArray, filter, switchMap } from 'rxjs/operators';
 import { Todo, TodoFilters, User } from '../models/model';
 import { FormControl } from '@angular/forms';
+import { all } from 'q';
 
 
 @Component({
@@ -48,17 +49,43 @@ export class FeatureComponent implements OnInit {
 
     this.usernames$ = searchedUsers$.pipe(map(u => getFullNames(u)));
     
-    /** not updating the ''all'' array --> to fix */
+    const changedTodos$: Observable<Todo[]> = this.changedTodo.asObservable().pipe(
+      switchMap(x => x),
+      scan((acc:Todo[], curr:Todo)=> {
+        const indexOfCurr = (): number => acc.map(x => x.id).indexOf(curr.id);
+        if(curr === null)
+          return acc;
+
+        return indexOfCurr() === -1
+          ? [...acc, curr]
+          : [
+            ...acc.slice(0, indexOfCurr()),
+            curr,
+            ...acc.slice(indexOfCurr() + 1)
+          ]
+        }, [])
+      );
+
     const allTodos$: Observable<Todo[]> = combineLatest(
       this.backend.fetchTodos(),
-      this.changedTodo.asObservable().pipe(switchMap(x => x))
+      changedTodos$
     ).pipe(
-      map(([all, changed]) => changed !== null
-        ? all.reduce((acc, curr) => changed.id === curr.id
-          ? [...acc, changed]
-          : [...acc, curr]
-        , [])
-        : all)
+      map(([all, changed]) => {
+        if(changed === null)
+          return all;
+
+        const swap = (arr: Todo[], index: number, value: Todo) => [
+          ...arr.slice(0, index),
+          value,
+          ...arr.slice(index + 1)
+        ];
+        return all.reduce((acc, curr, index) => {
+          const toSwap = () => changed.filter(x => x.id === curr.id)[0];
+          return changed.map(x => x.id).includes(curr.id)
+            ? swap(acc, index, toSwap())
+            : [...acc, curr] 
+        }, []);
+      })
     );
 
     this.todos$ = combineLatest(
