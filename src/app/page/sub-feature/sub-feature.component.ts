@@ -21,7 +21,6 @@ export class SubFeatureComponent {
   }
 
   toggleTodo(todo: Todo) {
-    console.log('clicked and about to emit');
     this.todoToggled.emit(todo);
   }
 }

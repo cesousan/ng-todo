@@ -124,7 +124,6 @@ const getFullNames = (users: User[]): string[] =>
 )
   
 const visibilityFilter = (todoFilter: TodoFilters): FilterFn => {
-  console.log(todoFilter);
   switch (todoFilter) {
     case TodoFilters.SHOW_COMPLETED:
       return todo => todo.completed;
